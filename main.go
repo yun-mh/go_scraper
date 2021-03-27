@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
@@ -29,7 +31,29 @@ func main() {
 		jobsTotal = append(jobsTotal, jobs...)
 	}
 
-	fmt.Println(jobsTotal)
+	writeJobs(jobsTotal)
+	fmt.Println(strconv.Itoa(len(jobsTotal)) + "件の抽出完了！")
+}
+
+func writeJobs(jobs []extractedJob) {
+	file, err := os.Create("jobs.csv")
+	checkErr(err)
+
+	w := csv.NewWriter(file)
+
+	defer w.Flush()
+
+	headers := []string{"リンク", "タイトル", "位置", "年収", "備考"}
+
+	wErr := w.Write(headers)
+	checkErr(wErr)
+
+	for _, job := range jobs {
+		jobSlice := []string{"https://kr.indeed.com/jobs?q=python&vjk=" + job.id, job.title, job.location, job.salary, job.summary}
+		jwErr := w.Write(jobSlice)
+		checkErr(jwErr)
+	}
+
 }
 
 func getPage(page int) []extractedJob {
